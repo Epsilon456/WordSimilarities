@@ -1,10 +1,14 @@
-
-
+"""
+This file contains all of the urls and filepathways used throughout this solution.
+"""
+#The URL to get to the UCS course catalog
 url = r'https://classes.usc.edu/term-20193/'
+
+#Preprocessing steps save data so that the entire code does not need to be run every time.
+
+#The raw data saved after scraping the site
 pickleJar = r'D:\Python Codes\Graph Theory\USCCourses\pickleFile.pkl'   
-gloveJar =    r'D:\Python Codes\Graph Theory\USCCourses\gloveJar.pkl'
+#A JSON file containing the clean data
 jsonFile = r'D:\Python Codes\Graph Theory\USCCourses\jsonFile.json' 
-
-StopPhrases = ["Open Only To .+ Majors",r'\w{2,3,4}\s{1}\d{3}.',]
-StopWords = [".",";",":","/",' a ',' of ',' the ',"prerequisite","or","at","to","will","are","be"]
-
+#The pretrained word vectors downloaded from the glove dataset.
+gloveJar = r'D:\Python Codes\Graph Theory\USCCourses\gloveJar.pkl'
