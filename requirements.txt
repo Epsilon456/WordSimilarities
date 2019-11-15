@@ -1,0 +1,7 @@
+numpy==1.16.4
+lxml==4.4.1
+gensim==3.8.0
+requests==2.22.0
+pandas==0.25.1
+python_Levenshtein==0.12.0
+scikit_learn==0.21.3
