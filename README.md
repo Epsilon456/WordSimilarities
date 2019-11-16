@@ -144,6 +144,16 @@ All helper methods are preceeded with an underscore.
 The scoring script contains functions which call the methods outlined in the "Similarities" class.
 These functions are used to apply the similarity methods across a dataset and to score the methods
 with two accuracy score functions.
+# Results
+The table below shows the results from an example output.  It appears that the WordSim model works the best of any of the 5 methods used.  This is likely better than the Jacard and Levenschtein models since WordSim has a basic understanding of the udnerlying concepts within the course descriptions.  Interestingly, it outperforms both the DocSim and GloveSim models (both of which performed worse than the first two).  The DocSim model likely underperforms due to a lack of training data.  The GloveSim model, however, likely underperforms due to the fact that it is a pretrained model that has not seen this domain-specific data.
+
+The school metric seems to be a better indicator than the prerequisite metric.  This is likely due to several issues surrounding the prerequisite method.  First, most courses do not have a prerequisite making it difficult to use that as a gage for every course.  Secondly, since only 10% of the data is used in the test dataset, the program is only tyring to find the closest matches within that 10%.  Since few courses have the same prerequisites, this would explain why the top courses usually do not contain the same prerequisites.  
+	      School	Preq
+Jacard	0.65	0.50
+Lev	    0.65	0.51
+WordSim	0.73	0.51
+DocSim	0.57	0.48
+GloveSim	0.59	0.48
 
 # Author
 Arren Bustamante
