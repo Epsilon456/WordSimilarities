@@ -2,6 +2,9 @@ import Similarities as Sims
 import pandas as pd
 import Score
 from sklearn.utils import shuffle
+import os
+import Setup
+
 """This file serves as a wrapper which will call functions from all other scripts to run through the entire process of 
 scraping, cleaning, evaluating, and scoring.
 """
@@ -27,16 +30,20 @@ def SplitData(df,trainRatio=.9):
     
     return trainSet,testSet
 
-#Ask the user to either re-crawl the USC course site or to load data from a previous crawl.
-reCrawl = int(input("Re Crawl Site? \n0) No\n1) Yes"))
+#If a checkpoint file is found,ask the user to either re-crawl the USC course 
+    #site or to load data from a previous crawl.
+if os.path.exists(Setup.pickleJar):
+    reCrawl = int(input("Re Crawl Site? \n0) No\n1) Yes"))
+else:
+    reCrawl = 0
+    
+#Either crawl USC's course site or laod the checkpoint file.
 if reCrawl == 1:
     import USCCrawler2 as USCC
-
     #Run python script to crawl USC site.
     List = USCC.USCCrawl()
 else:
     import pickle
-    import Setup
     #Load a list of dictionaries from the pickle file.  Each dictionary will contain the following labels:
         #'name','number',description','school',and 'preq'
     with open(Setup.pickleJar,'rb') as f:
@@ -46,7 +53,13 @@ else:
     #cleaned. Data will be in a dictionary that can be accessed by "Dictionary[number][label]"
     #where the "number" is the course number (all lowercase with no colon) and the label is one of the following:
     #'name','number',description','school',and 'preq'
-reClean = int(input("Re Clean Data? \n0) No\n1) Yes"))
+    
+if os.path.exists(Setup.jsonFile):
+    reClean = int(input("Re Clean Data? \n0) No\n1) Yes"))
+else:
+    reClean = 0
+    
+#Either call Cleaner functions or load checkpoint json file.
 if reClean == 1:
     import Cleaner
     #Run Cleaning script to generate dictionary
@@ -54,7 +67,6 @@ if reClean == 1:
     #Convert dictionary into pandas dataframe.
     df = pd.DataFrame.from_dict(Dictionary,orient='index')
     print("Cleaned Data")
-
 else:
     #Load a dataframe from a json file.
     import Setup

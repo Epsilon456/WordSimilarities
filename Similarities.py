@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 """This script contains a single class which in turn, contains all 5 of the methods to be tested (as well as their 
 initialization functions.)  The five methods are as follows:
-    1) Jacard Similarity between course descriptions
+    1) Jacard Similarity between course descriptions 
     2) Leveshtein Distance between course names
     3) Similarity of the average Word2Vec encoding of course descriptions
     4) Similarity of the Doc2Vec encodings of course descriptions.
@@ -15,6 +15,13 @@ initialization functions.)  The five methods are as follows:
         2) The average + 1 st dev of all vector encodings
         3) A vector consisting of the max values of all vector encodings
         4) A vector consisting of the min values of all vector encodings.
+    
+    The methods used to to call these are as follows:
+        Jacard
+        Lev
+        WordSim
+        DocSim
+        GloveSim
 """
 
 class Similarities:
@@ -67,13 +74,14 @@ class Similarities:
                 word_vectors = pickle.load(f)
         #If the model has not already been saved, call the api downloader to download the model.
         else:
+            print("Downloading GloVe word embeddings with gensim...")
             "Maybe add an option to switch off pickle mode?"
             import gensim.downloader as api
             word_vectors = api.load("glove-wiki-gigaword-100") 
             #Once the model has been downloaded, save the word_vectors as a pickle file for later use.
             with open(Setup.gloveJar,'wb') as f:
                 pickle.dump(word_vectors,f)
-            print("pickled word vectors download")
+            print("word vectors saved to .pkl file")
         #Allow word vectors to be accessed by other methods in the class.
         self.gloveModel = word_vectors
         print("Glove model initialized")
@@ -100,7 +108,7 @@ class Similarities:
             if a in setB:
                 score +=1
         #Divide the number by the total length of both sets.
-        return score/(len(setA)+len(setB))
+        return score/(len(setA.union(setB))
 
     def Lev(self,testDf,a,b):
         """Calculates the Levenshtein distance between two course names.
