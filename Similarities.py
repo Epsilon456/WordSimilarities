@@ -50,7 +50,7 @@ class Similarities:
         
     def _initWordVec(self):
         #Load the list of list consisting of the course descriptions into the word2vec model. Train the model
-        self.WordVecModel = gensim.models.Word2Vec(self.texts,size=150,window=10,min_count=2,workers=4,iter=100)
+        self.WordVecModel = gensim.models.Word2Vec(self.texts,size=300,window=5,min_count=2,workers=4,iter=100)
         print("Word2Vec Model initialized")
     def _initDocVec(self):
         #Initializes and trains the doc2vec embedding
@@ -61,7 +61,7 @@ class Similarities:
         for i in range(len(self.texts)):
             documents.append(TaggedDocument(self.texts[i],[i]))
         #Train the doc2vec model with the tagged documents.
-        self.DocVecModel = Doc2Vec(documents, vector_size=150, window=10, min_count=2, workers=4,epochs=100)
+        self.DocVecModel = Doc2Vec(documents, vector_size=300, window=5, min_count=2, workers=4,epochs=100)
         print("Doc2Vec Model initialized")
     def _initGloveVec(self):
         #Initializes the pre-trained GloVe model.
@@ -71,19 +71,19 @@ class Similarities:
         #If the model has already been saved, import it from the pickle file and store to the variabe "word_vectors"
         if os.path.exists(Setup.gloveJar):
             with open(Setup.gloveJar,'rb') as f:
-                word_vectors = pickle.load(f)
+                glove = pickle.load(f)
         #If the model has not already been saved, call the api downloader to download the model.
         else:
             print("Downloading GloVe word embeddings with gensim...")
             "Maybe add an option to switch off pickle mode?"
             import gensim.downloader as api
-            word_vectors = api.load("glove-wiki-gigaword-100") 
+            glove = api.load("glove-wiki-gigaword-100") 
             #Once the model has been downloaded, save the word_vectors as a pickle file for later use.
             with open(Setup.gloveJar,'wb') as f:
-                pickle.dump(word_vectors,f)
+                pickle.dump(glove,f)
             print("word vectors saved to .pkl file")
         #Allow word vectors to be accessed by other methods in the class.
-        self.gloveModel = word_vectors
+        self.gloveModel = glove
         print("Glove model initialized")
             
     def Jacard(self,testDf,a,b):
@@ -108,7 +108,7 @@ class Similarities:
             if a in setB:
                 score +=1
         #Divide the number by the total length of both sets.
-        return score/(len(setA.union(setB))
+        return score/(len(setA.union(setB)))
 
     def Lev(self,testDf,a,b):
         """Calculates the Levenshtein distance between two course names.
@@ -189,8 +189,8 @@ class Similarities:
         textB = testDf['description'][b]
         
         #Obtain the document embedding vector for each description.
-        vectorA = self.DocVecModel.infer_vector([textA], alpha=0.1, min_alpha=0.0001, steps=5)
-        vectorB = self.DocVecModel.infer_vector([textB], alpha=0.1, min_alpha=0.0001, steps=5)
+        vectorA = self.DocVecModel.infer_vector([textA], alpha=0.1, min_alpha=0.0001, steps=300)
+        vectorB = self.DocVecModel.infer_vector([textB], alpha=0.1, min_alpha=0.0001, steps=300)
         
         #Convert vectors to column vectors to be fed into the cosine_similarity function. 
         A = np.expand_dims(vectorA,0)
@@ -256,17 +256,3 @@ class Similarities:
 
 
     
-#test = Similarities()
-#a = 'acmd 501'
-#b = 'acmd 502'  
-#test.GloveSim(a,b)
-    
-    
-    
-    
-
-
-
-
-
-

@@ -10,9 +10,10 @@ includes moving all strings into lower case and stop word removal.
 #Two re's are contained here. The first is a repeated phrase "open only to _ majors"
 #The second is when the prerequisite courses are copied in the description.
 StopPhrases = ["Open Only To .+ Majors",r'\w{2,3,4}\s{1}\d{3}.']
+
 #Words and symbols to remove from the text
-StopWords = [".",";",":","/",' a ',' of ',' the ',"prerequisite","or","at","to","will","are","be"]
-    
+StopWords = [".",";",":","/",' a ',' of ',' the '," prerequisite "," or "," at "," to "," will "," are "," be "]
+
 def CleanDesc(text):
     """Cleans the description text
     """
@@ -65,7 +66,11 @@ def Clean(List):
         preqName = []
         for pn in item['preqName']:
             preqName.append(CleanNumber(pn))
-        Dictionary[number] = {'name':name,'description':description,'preqName':preqName,'school':school}
+            
+        #Many of the thesis courses do not contain enough information to predict the prerequisites or school
+            #by description or course title.
+        if "credit on acceptance dissertation" not in description:
+            Dictionary[number] = {'name':name,'description':description,'preqName':preqName,'school':school}
         
     #Save dictionary to json file.
     import json

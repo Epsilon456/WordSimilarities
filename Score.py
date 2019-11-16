@@ -23,13 +23,11 @@ def SimScore(df,incourse,method):
     #Go through each index in the dataframe and calculate the similarity between the row in the dataframe 
         #and the given course (incourse)
     for index, _ in df.iterrows():
-        _vec = method(df,incourse,index)
-        #If the two courses are identical, hard set the score to 0. This is done so that courses will not match
-            #with themselves.
-        if vec == 1.0:
-            vec = 0.0
-        #Store the results to a dictionary indexed by course number.
-        vec[index] = _vec
+        if index != incourse:
+            _vec = method(df,incourse,index)
+    
+            #Store the results to a dictionary indexed by course number.
+            vec[index] = _vec
 
     #Convert the dictionary to a dataframe. Sort the dataframe by the similarity scores.
     Vec = pd.DataFrame.from_dict(vec,orient='index')
@@ -134,9 +132,22 @@ def ScoreMethod(testSet,S,ScoreDict,iterations):
     #Iterate over each method
     for methodName in Methods.keys():
         #Iterate over each course.
-        for course in testSet.index:
+        for course in testSet.head(100).index:
             #Calculate the similarity score for each course number in "testSet" and sort the list.
             Vec = SimScore(testSet,course,Methods[methodName])
+            """The section below is commented out as it is used to print out course descriptions
+            for matching courses for debugging.
+            """
+#            if methodName == "DocSim":
+#                    print("\n\n")
+#                    print("In",course,testSet['description'][course])
+#                    print(testSet['preqName'][course])
+#                    print("\n\n")
+#                    print("Comp",Vec.index[0],testSet['description'][Vec.index[0]])
+#                    print(testSet['preqName'][Vec.index[0]])
+#                    a = input("press any key to continue, press 'q' to quit.")
+#                    if a == 'q':
+#                        break
             #Calculate the accuracy of this scoring by using the two accuracy metrics.
             metS = SchoolMetric(testSet,course,Vec)
             metP = PreqMetric(testSet,course,Vec)
