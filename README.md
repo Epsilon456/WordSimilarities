@@ -167,12 +167,15 @@ with two accuracy score functions.
 The table below shows the results from an example output.  THe WordSim model outperforms all other methods by both metrics.  It is understandable that the WordSim model outperforms the Jacard and Lev models, since wordsim uses a deeper understanding of the course descriptions.  (The Lev model for example, only looks at course names and does not awknowledge descriptions at all).  Interestingly, however, the other two embedding models (DocSim and GloveSim) underperform all others.  The low performance of the GloveSim model could be explained by the fact that it was not trained with domain specific data as the WordSim model was.  The low performance of the DocSim model, however, does not have an obvious explaination.
 
 In general, the prerequisite scores for each method are nearly the same (with the exception of docsim performing poorly).  The prerequisites may not be the best metric since not all courses have prerequisites.  Courses that do have prerequisites may not have a similar course that has the exact same prerequisits.  As a result, most of the time, the prerequsites for a given course and the most similar course will not match (if they have prerequisits to begin with).  
-            School      Preq
-Jacard    0.762222  0.497531
-Lev       0.730000  0.475926
-WordSim   0.820000  0.517284
-DocSim    0.592222  0.444444
-GloveSim  0.598889  0.503704
+
+```
+            School    Preq
+Jacard     0.762222  0.497531
+Lev        0.730000   0.475926
+WordSim    0.820000   0.517284
+DocSim     0.592222   0.444444
+GloveSim   0.598889   0.503704
+```
 
 # Author
 Arren Bustamante
