@@ -27,24 +27,38 @@ initialization functions.)  The five methods are as follows:
 class Similarities:
     """This class takes in a training data frame that is used to train the word2vec and doc2vec embeddings.  
     The 5 methods can the be called when passed the test data frame.
+    Initialize this class with:
+        trainDF - The dataframe used to train the embeddings.  This will also be the dataframe from which
+            the program will pull the course closest to the test course.
+        Mode - Either "All" for initializing all 5 methods or "Word" for only initializing "WordSim"
     """
-    def __init__(self,df):
+    def __init__(self,trainDF,mode="All"):
+        self.mode = mode
         #The input training data frame.
-        self.df = df
+
+        self.trainDF = trainDF
         #Transforms the text strings from the descriptions into a list of list of words.
         self._initText()
         #Initializes and trains the word2vec embeddings.
         self._initWordVec()
-        #Initializes and trains the doc2vec embeddigns.
-        self._initDocVec()
-        #Loads in the pretrained GloVe data.
-        self._initGloveVec()
+        #Only initialize DocSim and GloveSim if required.
+        if mode == "All":
+            #Initializes and trains the doc2vec embeddigns.
+            self._initDocVec()
+            #Loads in the pretrained GloVe data.
+            self._initGloveVec()
+        #Build a dictionary containing the embeddings for each description. This make it so that the 
+            #the embedding functions only need to be called once for the test course which will then 
+            #be compared to the embeddings in this dictionary.
+        self.VDF = {"Word":{},"Doc":{},"Glove":{}}
+        self._BuildSims()
+        
         
     def _initText(self):
         #Get text from descriptions. The variable is a nested list where the outer list represents
         #each description and the inner list is each word in that description.
         self.texts = []
-        for index, row in self.df.iterrows():
+        for index, row in self.trainDF.iterrows():
             self.texts.append(row['description'].split())
         print("Text initialized")
         
@@ -86,7 +100,7 @@ class Similarities:
         self.gloveModel = glove
         print("Glove model initialized")
             
-    def Jacard(self,testDf,a,b):
+    def Jacard(self,testDf,listCourse,inCourse):
         """Calculates the Jacard similarity between two course descriptions.
         Inputs:
             testDF - The test dataframe consisting of columns ('index','description','preqNames',and 'school') with rows
@@ -96,8 +110,8 @@ class Similarities:
             The Jacard similarity score scaled between 0 and 1.
         """
         #Obtain the course descriptions for the two course indexes inputed into the function.
-        A = testDf['description'][a]
-        B = testDf['description'][b]
+        A = self.trainDF['description'][listCourse]
+        B = testDf['description'][inCourse]
         #Create a set of words for each description.
         setA = set(A.split())
         setB = set(B.split())
@@ -110,7 +124,7 @@ class Similarities:
         #Divide the number by the total length of both sets.
         return score/(len(setA.union(setB)))
 
-    def Lev(self,testDf,a,b):
+    def Lev(self,testDf,listCourse,inCourse):
         """Calculates the Levenshtein distance between two course names.
         Inputs:
             testDF - The test dataframe consisting of columns ('index','description','preqNames',and 'school') with rows
@@ -123,14 +137,14 @@ class Similarities:
             This number is scaled between 0 and 1 where 1 represents a perfect match.
         """
         #Obtain the couse names for the two courses provided
-        A = testDf['name'][a]
-        B = testDf['name'][b]
+        A = self.trainDF['name'][listCourse]
+        B = testDf['name'][inCourse]
         #Figure out the length of the longest course name.
         maxLen = max(len(A),len(B))
         #Calculate the compliment of the normalized Levenshtein distance.  
         return 1-LV.distance(A,B)/maxLen  
     
-    def _WordSimAveVec(self,testDf,a):
+    def _WordSimAveVec(self,df,a):
         """Calculates the a document embedding vector by taking the average of all word vectors in the document. This is
         a helper function to be used with the "WordSim" method.
         Inputs:
@@ -141,7 +155,7 @@ class Similarities:
             A vector embedding representing the entire document.
         """
         #Obtain the course description for the course provided and convert the string into a list of individual words.
-        Description = testDf['description'][a].split()
+        Description = df['description'][a].split()
         #Create a placeholder zero vector of the same size as the vector embedding.
         Vector = np.zeros(self.WordVecModel.layer1_size)
         wordCount = 0
@@ -157,19 +171,48 @@ class Similarities:
         #Calculate the mean by dividing the sum by the number of vectors.
         return Vector/wordCount
     
-    def WordSim(self,testDF,a,b):
+    def _BuildSims(self):
+        """Builds up the dictionary "self.VDF" to contain all of the document vector embeddings which are in 
+        the training dataset to act as a reference. This way, the references only need to be calculated once.
+        The method will build up the dictionary using 3 "columns" - one for each word embedding if "All" mode
+        was selected for initializing the class.  If "Word" mode was selected, it will only build the dictionary
+        for the "WordSim" method.
+        Dictionary will be in the form VDF[Method][courseName]
+        """
+        if self.mode == "All":
+            #Iterate through all rows of the training dataframe.
+            for index, _ in self.trainDF.iterrows():
+                #Obtain the document embeddings for each method.
+                wordVec = self._WordSimAveVec(self.trainDF,index)
+                docVec = self._DocSim(self.trainDF,index)
+                gloveVec = self._GloveSim(self.trainDF,index)
+                #Save the embeddings to a dictionary
+                self.VDF["Word"][index] = wordVec
+                self.VDF["Doc"][index] = docVec
+                self.VDF["Glove"][index] = gloveVec
+        if self.mode == "Word":
+            for index, _ in self.trainDF.iterrows():
+                wordVec = self._WordSimAveVec(self.trainDF,index)
+                self.VDF["Word"][index] = wordVec
+          
+    
+    def WordSim(self,testDF,listCourse,inCourse):
         """Calculate the cosine similarity between two vectors where each vector represents a course
         description. Each vector is made by taking the average of each word vector that makes up the description. Average
         vectors are calculated by a helper method "_WordSimAveVec"
         Inputs:
             testDF - A test dataframe consisting of columns ('index','description','preqNames',and 'school') with rows
                 consisting of the course number indexes (all lowercase no colons.) 
-            a,b - A string representing the course number
+            listCourse - A string containing the course number of the reference course in the trainSet
+            inCourse - A string containing the course number of the input test course.
         """
         #Obtain a single vector embedding for each course description (calculated by taking an average of each word 
             #embedding that makes up each description)
-        aVec = self._WordSimAveVec(testDF,a)
-        bVec = self._WordSimAveVec(testDF,b)
+            
+        #Get the embedding from the dictionary for the list (reference) course
+        aVec = self.VDF["Word"][listCourse]
+        #Calculate the embedding with the doc2Vec model.
+        bVec = self._WordSimAveVec(testDF,inCourse)
         #Convert vectors to column vectors to be fed into the cosine_similarity function.
         A = np.expand_dims(aVec,0)
         B = np.expand_dims(bVec,0)
@@ -177,20 +220,30 @@ class Similarities:
         sim = cosine_similarity(A,B)
         return float(sim)
         
-    
-    def DocSim(self,testDf,a,b):
+    def _DocSim(self,df,a):
         """Calculate the cosine similarity between two document vectors.
         Inputs:
             testDF - A test dataframe consisting of columns ('index','description','preqNames',and 'school') with rows
                 consisting of the course number indexes (all lowercase no colons.) 
-            a,b - A string representing the course number"""
+            a - A string representing the course number"""
         #Obtain the descriptions of the two input courses.
-        textA = testDf['description'][a]
-        textB = testDf['description'][b]
-        
+        textA = df['description'][a]
         #Obtain the document embedding vector for each description.
         vectorA = self.DocVecModel.infer_vector([textA], alpha=0.1, min_alpha=0.0001, steps=300)
-        vectorB = self.DocVecModel.infer_vector([textB], alpha=0.1, min_alpha=0.0001, steps=300)
+        return vectorA
+    
+    def DocSim(self,testDF,listCourse,inCourse):
+        """Calculates a vector embedding for a course description using the doc2vec method.
+        Inputs:
+            testDF  - A test dataframe consisting of columns ('index','description','preqNames',and 'school') with rows
+                consisting of the course number indexes (all lowercase no colons.) 
+            listCourse - A string containing the course number of the reference course in the trainSet
+            inCourse - A string containing the course number of the input test course.
+        """
+        #Reference the VDF dictionary to get the doc embedding for the listCourse
+        vectorA = self.VDF["Doc"][listCourse]
+        #Calculate the doc embedding for the input course
+        vectorB = self._DocSim(testDF,inCourse)
         
         #Convert vectors to column vectors to be fed into the cosine_similarity function. 
         A = np.expand_dims(vectorA,0)
@@ -198,7 +251,7 @@ class Similarities:
         #Calculate the cosine similarity between the two vectors.
         sim = cosine_similarity(A,B)
         return float(sim)
-    
+        
 
     def _GloveSim(self,testDf,a):
         """Uses the word vectors from the pre-trained GloVe model to generate an array representing the document. 
@@ -231,17 +284,21 @@ class Similarities:
         
         return np.stack((a0,asd,amax,amin),1)
     
-    def GloveSim(self,testDf,a,b):
+    def GloveSim(self,testDf,listCourse,inCourse):
         """Calculate the cosine similarity between two document arrays.
         Inputs:
             testDF - A test dataframe consisting of columns ('index','description','preqNames',and 'school') with rows
                 consisting of the course number indexes (all lowercase no colons.) 
-            a,b - A string representing the course number
+            listCourse - A string containing the course number of the reference course in the trainSet
+            inCourse - A string containing the course number of the input test course.
         Outputs
             Cosine similarity"""
         #Obtain the matrix representation of the document encoding for each description. Transpose the matricies
-        A = self._GloveSim(testDf,a).T
-        B = self._GloveSim(testDf,b).T
+        
+        #Obtain the embedding from the dictionary for the list course
+        A = self.VDF['Glove'][listCourse].T
+        #Calculate the embedding for the input course using the GloVe model.
+        B = self._GloveSim(testDf,inCourse).T
         
         #Take the cosine similarity of these two matricies. This creates a 4x4 matrix where each row represents
             #one of the four categories (mean,stdev,max,min) of one course description and each column represents one of the four
@@ -254,5 +311,10 @@ class Similarities:
     
     
 
-
+#            School      Preq
+#Jacard    0.762222  0.497531
+#Lev       0.730000  0.475926
+#WordSim   0.820000  0.517284
+#DocSim    0.592222  0.444444
+#GloveSim  0.598889  0.503704
     

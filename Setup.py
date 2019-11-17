@@ -14,3 +14,6 @@ pickleJar = os.path.join(rootFolder,"pickleFile.pkl")
 jsonFile = os.path.join(rootFolder,"jsonFile.json")
 #The pretrained word vectors downloaded from the glove dataset.
 gloveJar = os.path.join(rootFolder,"gloveJar.pkl")
+#Pickle file storing raw UCLA data
+UCLA = os.path.join(rootFolder,"UCLAJar.json")
+UCLAClean = os.path.join(rootFolder,"UCLAClean.json")

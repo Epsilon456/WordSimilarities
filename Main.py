@@ -89,7 +89,7 @@ for i in range(iterations):
     S = Sims.Similarities(trainSet)
     #Score each method using the two performance metrics. ScoreDict will contain a score for 
         #each method-metric pair where 1.0 represents 100% accuracy.
-    ScoreDict = Score.ScoreMethod(testSet,S,ScoreDict,iterations)
+    ScoreDict = Score.ScoreMethod(trainSet,testSet,S,ScoreDict,iterations,numberTest=30)
     print("Finished Cross Validation",i+1)
     
 #Convert resuls to a pandas dataframe that can be easily displayed or saved to a file.
