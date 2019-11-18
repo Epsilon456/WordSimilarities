@@ -134,7 +134,11 @@ def ScoreMethod(trainSet,testSet,S,ScoreDict,iterations,numberTest=50):
         An updated version of ScoreDict
     """
     #A dictionary connecting the name of each method to the function which calculates it.
-    Methods = {"Jacard":S.Jacard,"Lev":S.Lev,"WordSim":S.WordSim,"DocSim":S.DocSim,"GloveSim":S.GloveSim}
+    if S.GloveFail == False:
+        Methods = {"Jacard":S.Jacard,"Lev":S.Lev,"WordSim":S.WordSim,"DocSim":S.DocSim,"GloveSim":S.GloveSim}
+    else:
+        Methods = {"Jacard":S.Jacard,"Lev":S.Lev,"WordSim":S.WordSim,"DocSim":S.DocSim}
+
        
     #Iterate over each method
     for methodName in Methods.keys():

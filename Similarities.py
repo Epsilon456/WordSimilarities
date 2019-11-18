@@ -33,6 +33,7 @@ class Similarities:
         Mode - Either "All" for initializing all 5 methods or "Word" for only initializing "WordSim"
     """
     def __init__(self,trainDF,mode="All"):
+        self.GloveFail = False
         self.mode = mode
         #The input training data frame.
 
@@ -90,23 +91,29 @@ class Similarities:
         else:
             print("Downloading GloVe word embeddings with gensim...")
             "Maybe add an option to switch off pickle mode?"
-            import gensim.downloader as api
-            glove = api.load("glove-wiki-gigaword-100") 
-            #Once the model has been downloaded, save the word_vectors as a pickle file for later use.
-            with open(Setup.gloveJar,'wb') as f:
-                pickle.dump(glove,f)
-            print("word vectors saved to .pkl file")
+            try:
+                import gensim.downloader as api
+#                glove = api.load("glove-wiki-gigaword-100") 
+                glove = api.load() 
+
+                #Once the model has been downloaded, save the word_vectors as a pickle file for later use.
+                with open(Setup.gloveJar,'wb') as f:
+                    pickle.dump(glove,f)
+                print("word vectors saved to .pkl file")
+                self.gloveModel = glove
+                print("Glove model initialized")
+            except:
+                print("Glove Sim model failed to download")
+                self.GloveFail = True
         #Allow word vectors to be accessed by other methods in the class.
-        self.gloveModel = glove
-        print("Glove model initialized")
+
             
     def Jacard(self,testDf,listCourse,inCourse):
         """Calculates the Jacard similarity between two course descriptions.
         Inputs:
             testDF - The test dataframe consisting of columns ('index','description','preqNames',and 'school') with rows
                 consisting of the course number indexes (all lowercase no colons.)
-            listCourse - A string containing the course number of the reference course in the trainSet
-            inCourse - A string containing the course number of the input test course.
+            a,b - each of these is a string representing the course number.
         Outputs:
             The Jacard similarity score scaled between 0 and 1.
         """
@@ -130,8 +137,7 @@ class Similarities:
         Inputs:
             testDF - The test dataframe consisting of columns ('index','description','preqNames',and 'school') with rows
                 consisting of the course number indexes (all lowercase no colons.)
-            listCourse - A string containing the course number of the reference course in the trainSet
-            inCourse - A string containing the course number of the input test course.
+            a,b - each of these is a string representing the course number.
         Outputs:
             The compliment of the normalized Levenshtein distance
             (The compliment is calculated by 1-(L/D) where L is the Levenshtein distance and D is the length of the 
@@ -187,11 +193,12 @@ class Similarities:
                 #Obtain the document embeddings for each method.
                 wordVec = self._WordSimAveVec(self.trainDF,index)
                 docVec = self._DocSim(self.trainDF,index)
-                gloveVec = self._GloveSim(self.trainDF,index)
                 #Save the embeddings to a dictionary
                 self.VDF["Word"][index] = wordVec
                 self.VDF["Doc"][index] = docVec
-                self.VDF["Glove"][index] = gloveVec
+                if self.GloveFail == False:
+                    gloveVec = self._GloveSim(self.trainDF,index)
+                    self.VDF["Glove"][index] = gloveVec
         if self.mode == "Word":
             for index, _ in self.trainDF.iterrows():
                 wordVec = self._WordSimAveVec(self.trainDF,index)

@@ -35,7 +35,7 @@ def SplitData(df,trainRatio=.9):
 if os.path.exists(Setup.pickleJar):
     reCrawl = int(input("Re Crawl Site? \n0) No\n1) Yes"))
 else:
-    reCrawl = 0
+    reCrawl = 1
     
 #Either crawl USC's course site or laod the checkpoint file.
 if reCrawl == 1:
@@ -57,7 +57,7 @@ else:
 if os.path.exists(Setup.jsonFile):
     reClean = int(input("Re Clean Data? \n0) No\n1) Yes"))
 else:
-    reClean = 0
+    reClean = 1
     
 #Either call Cleaner functions or load checkpoint json file.
 if reClean == 1:
@@ -80,7 +80,7 @@ ScoreDict = {"Jacard":{},"Lev":{},"WordSim":{},"DocSim":{},"GloveSim":{}}
 for sd in ScoreDict.keys():
     ScoreDict[sd] = {"School":0,"Preq":0}
     
-iterations = 3
+iterations = 1
 for i in range(iterations):
     #Randomly split data into training and test dataset at each iteration.
     trainSet,testSet = SplitData(df)
