@@ -105,7 +105,8 @@ class Similarities:
         Inputs:
             testDF - The test dataframe consisting of columns ('index','description','preqNames',and 'school') with rows
                 consisting of the course number indexes (all lowercase no colons.)
-            a,b - each of these is a string representing the course number.
+            listCourse - A string containing the course number of the reference course in the trainSet
+            inCourse - A string containing the course number of the input test course.
         Outputs:
             The Jacard similarity score scaled between 0 and 1.
         """
@@ -129,7 +130,8 @@ class Similarities:
         Inputs:
             testDF - The test dataframe consisting of columns ('index','description','preqNames',and 'school') with rows
                 consisting of the course number indexes (all lowercase no colons.)
-            a,b - each of these is a string representing the course number.
+            listCourse - A string containing the course number of the reference course in the trainSet
+            inCourse - A string containing the course number of the input test course.
         Outputs:
             The compliment of the normalized Levenshtein distance
             (The compliment is calculated by 1-(L/D) where L is the Levenshtein distance and D is the length of the 
