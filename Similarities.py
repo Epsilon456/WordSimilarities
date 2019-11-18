@@ -87,14 +87,15 @@ class Similarities:
         if os.path.exists(Setup.gloveJar):
             with open(Setup.gloveJar,'rb') as f:
                 glove = pickle.load(f)
+                self.gloveModel = glove
+
         #If the model has not already been saved, call the api downloader to download the model.
         else:
             print("Downloading GloVe word embeddings with gensim...")
             "Maybe add an option to switch off pickle mode?"
             try:
                 import gensim.downloader as api
-#                glove = api.load("glove-wiki-gigaword-100") 
-                glove = api.load() 
+                glove = api.load("glove-wiki-gigaword-100") 
 
                 #Once the model has been downloaded, save the word_vectors as a pickle file for later use.
                 with open(Setup.gloveJar,'wb') as f:
